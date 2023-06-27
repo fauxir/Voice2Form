@@ -1,0 +1,6 @@
+TO RUN THE PROJECT:
+
+npm install
+
+npx expo start
+
