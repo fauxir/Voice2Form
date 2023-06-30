@@ -177,6 +177,8 @@ const App = () => {
     }
   }, [inputText]);
 
+  let a  = (!isLoading && inputCount===1)  && <ActivityIndicator style={styles.loading}/>
+
   return (
     <View style={styles.container}>
       <Text style={styles.heading}>Testing recording</Text>
@@ -189,49 +191,70 @@ const App = () => {
           {recording ? "Recording..." : "Press and hold to record"}
         </Text>
       </TouchableOpacity>
-      <ActivityIndicator animating={isLoading} style={styles.loading} />
+      
       <View style={styles.outputWrapper}>
-        <TextInput
-          ref={input1Ref}
-          value={inputObj.input1}
-          onChangeText={(text) => handleChangeText(text, "input1")}
-          style={styles.output}
-          returnKeyType="next"
-          // onContentSizeChange={() => focusNextInput(input2Ref)}
-        />
-        <TextInput
-          style={styles.output}
-          value={inputObj.input2}
-          onChangeText={(text) => handleChangeText(text, "input2")}
-          ref={input2Ref}
-          returnKeyType="next"
-          onSubmitEditing={() => focusNextInput(input3Ref)}
-        />
-        <TextInput
-          value={inputObj.input3}
-          onChangeText={(text) => handleChangeText(text, "input3")}
-          style={styles.output}
-        />
-        <TextInput
-          value={inputObj.input4}
-          onChangeText={(text) => handleChangeText(text, "input4")}
-          style={styles.output}
-        />
-        <TextInput
-          value={inputObj.input5}
-          onChangeText={(text) => handleChangeText(text, "input5")}
-          style={styles.output}
-        />
-        <TextInput
-          value={inputObj.input6}
-          onChangeText={(text) => handleChangeText(text, "input6")}
-          style={styles.output}
-        />
-        <TextInput
-          value={inputObj.input7}
-          onChangeText={(text) => handleChangeText(text, "input7")}
-          style={styles.output}
-        />
+        <View style={styles.fieldWrapper}>  
+          <TextInput
+            ref={input1Ref}
+            value={inputObj.input1}
+            onChangeText={(text) => handleChangeText(text, "input1")}
+            style={styles.output}
+            returnKeyType="next"
+            // onContentSizeChange={() => focusNextInput(input2Ref)}
+          />
+          {(isLoading && inputCount===1)  && <ActivityIndicator style={styles.loading}/>}
+        </View>
+        <View style={styles.fieldWrapper}>
+          <TextInput
+            style={styles.output}
+            value={inputObj.input2}
+            onChangeText={(text) => handleChangeText(text, "input2")}
+            ref={input2Ref}
+            returnKeyType="next"
+            onSubmitEditing={() => focusNextInput(input3Ref)}
+          />
+          {(isLoading && inputCount===2)  && <ActivityIndicator style={styles.loading}/>}
+        </View>
+        <View style={styles.fieldWrapper}>
+          <TextInput
+            value={inputObj.input3}
+            onChangeText={(text) => handleChangeText(text, "input3")}
+            style={styles.output}
+          />
+          {(isLoading && inputCount===3)  && <ActivityIndicator style={styles.loading}/>}
+        </View>
+        <View style={styles.fieldWrapper}>
+          <TextInput
+            value={inputObj.input4}
+            onChangeText={(text) => handleChangeText(text, "input4")}
+            style={styles.output}
+          />
+          {(isLoading && inputCount===4)  && <ActivityIndicator style={styles.loading}/>}
+        </View>
+        <View style={styles.fieldWrapper}>
+          <TextInput
+            value={inputObj.input5}
+            onChangeText={(text) => handleChangeText(text, "input5")}
+            style={styles.output}
+          />
+          {(isLoading && inputCount===5)  && <ActivityIndicator style={styles.loading}/>}
+        </View>
+        <View style={styles.fieldWrapper}>
+          <TextInput
+            value={inputObj.input6}
+            onChangeText={(text) => handleChangeText(text, "input6")}
+            style={styles.output}
+          />
+          {(isLoading && inputCount===6)  && <ActivityIndicator style={styles.loading}/>}
+        </View>
+        <View style={styles.fieldWrapper}>
+          <TextInput
+            value={inputObj.input7}
+            onChangeText={(text) => handleChangeText(text, "input7")}
+            style={styles.output}
+          />
+          {(isLoading && inputCount===7)  && <ActivityIndicator style={styles.loading}/>}
+        </View>
       </View>
     </View>
   );
@@ -244,9 +267,12 @@ const styles = StyleSheet.create({
     paddingTop: 25,
     backgroundColor: "#fff",
   },
+  fieldWrapper: {
+  },
   loading: {
-    position: "relative",
-    top: 32,
+    position: "absolute", 
+    top: 10,
+    left: 10
   },
   heading: {
     fontSize: 24,
@@ -256,12 +282,9 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   output: {
-    height: 40,
     borderColor: "gray",
     borderWidth: 1,
-    marginTop: -17,
-    marginBottom: 16,
-    paddingLeft: 8,
+    height: 40,
   },
   outputWrapper: {
     marginTop: 20,
