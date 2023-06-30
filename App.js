@@ -6,6 +6,7 @@ import {
   TextInput,
   ActivityIndicator,
   TouchableOpacity,
+  Alert,
 } from "react-native";
 import { Audio } from "expo-av";
 import axios from "axios";
@@ -20,7 +21,7 @@ const App = () => {
   const input3Ref = useRef(null); // future use for jumping to another field
   const [isLoading, setIsLoading] = useState(false); //shows loader
   const [stoppedRec, setStoppedRec] = useState(false); //when true handdle sub and send to BE
-  const [inputCount, setInputCount] = useState(1);
+  const [inputCount, setInputCount] = useState(1); // keeps track of input filled field
   const [inputObj, setInputObj] = useState({
     input1: "",
     input2: "",
@@ -29,7 +30,7 @@ const App = () => {
     input5: "",
     input6: "",
     input7: "",
-  });
+  }); // input object 
 
   //start recording
   async function startRecording() {
@@ -49,6 +50,7 @@ const App = () => {
       console.log("Recording started");
     } catch (err) {
       console.error("Failed to start recording", err);
+      showErrorAlert("Failed to start recording, please try again.");
     }
   }
 
@@ -95,6 +97,9 @@ const App = () => {
       console.log("Upload successful");
     } catch (error) {
       console.log("Error occurred while uploading the recording:", error);
+      showErrorAlert(
+        "Error occurred while uploading the recording, please try again."
+      );
     }
   }
 
@@ -177,7 +182,22 @@ const App = () => {
     }
   }, [inputText]);
 
-  let a  = (!isLoading && inputCount===1)  && <ActivityIndicator style={styles.loading}/>
+  //Error alert
+  const showErrorAlert = (err) => {
+    setIsLoading(false);
+    Alert.alert("Error", err, [
+      { text: "OK", onPress: () => console.log("OK Pressed") },
+    ]);
+  };
+
+  //start stop recording on button press
+  const onPressHandler = () => {
+    if (recording) {
+      stopRecording();
+    } else {
+      startRecording();
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -191,9 +211,12 @@ const App = () => {
           {recording ? "Recording..." : "Press and hold to record"}
         </Text>
       </TouchableOpacity>
-      
+      <View style={styles.breakLine}/>
+      <TouchableOpacity onPress={onPressHandler} style={styles.button}>
+        <Text style={styles.buttonText}>{ recording ? 'Stop Recording' : 'Start Recording' }</Text>
+      </TouchableOpacity>
       <View style={styles.outputWrapper}>
-        <View style={styles.fieldWrapper}>  
+        <View style={styles.fieldWrapper}>
           <TextInput
             ref={input1Ref}
             value={inputObj.input1}
@@ -202,7 +225,9 @@ const App = () => {
             returnKeyType="next"
             // onContentSizeChange={() => focusNextInput(input2Ref)}
           />
-          {(isLoading && inputCount===1)  && <ActivityIndicator style={styles.loading}/>}
+          {isLoading && inputCount === 1 && (
+            <ActivityIndicator style={styles.loading} />
+          )}
         </View>
         <View style={styles.fieldWrapper}>
           <TextInput
@@ -213,7 +238,9 @@ const App = () => {
             returnKeyType="next"
             onSubmitEditing={() => focusNextInput(input3Ref)}
           />
-          {(isLoading && inputCount===2)  && <ActivityIndicator style={styles.loading}/>}
+          {isLoading && inputCount === 2 && (
+            <ActivityIndicator style={styles.loading} />
+          )}
         </View>
         <View style={styles.fieldWrapper}>
           <TextInput
@@ -221,7 +248,9 @@ const App = () => {
             onChangeText={(text) => handleChangeText(text, "input3")}
             style={styles.output}
           />
-          {(isLoading && inputCount===3)  && <ActivityIndicator style={styles.loading}/>}
+          {isLoading && inputCount === 3 && (
+            <ActivityIndicator style={styles.loading} />
+          )}
         </View>
         <View style={styles.fieldWrapper}>
           <TextInput
@@ -229,7 +258,9 @@ const App = () => {
             onChangeText={(text) => handleChangeText(text, "input4")}
             style={styles.output}
           />
-          {(isLoading && inputCount===4)  && <ActivityIndicator style={styles.loading}/>}
+          {isLoading && inputCount === 4 && (
+            <ActivityIndicator style={styles.loading} />
+          )}
         </View>
         <View style={styles.fieldWrapper}>
           <TextInput
@@ -237,7 +268,9 @@ const App = () => {
             onChangeText={(text) => handleChangeText(text, "input5")}
             style={styles.output}
           />
-          {(isLoading && inputCount===5)  && <ActivityIndicator style={styles.loading}/>}
+          {isLoading && inputCount === 5 && (
+            <ActivityIndicator style={styles.loading} />
+          )}
         </View>
         <View style={styles.fieldWrapper}>
           <TextInput
@@ -245,7 +278,9 @@ const App = () => {
             onChangeText={(text) => handleChangeText(text, "input6")}
             style={styles.output}
           />
-          {(isLoading && inputCount===6)  && <ActivityIndicator style={styles.loading}/>}
+          {isLoading && inputCount === 6 && (
+            <ActivityIndicator style={styles.loading} />
+          )}
         </View>
         <View style={styles.fieldWrapper}>
           <TextInput
@@ -253,7 +288,9 @@ const App = () => {
             onChangeText={(text) => handleChangeText(text, "input7")}
             style={styles.output}
           />
-          {(isLoading && inputCount===7)  && <ActivityIndicator style={styles.loading}/>}
+          {isLoading && inputCount === 7 && (
+            <ActivityIndicator style={styles.loading} />
+          )}
         </View>
       </View>
     </View>
@@ -267,12 +304,14 @@ const styles = StyleSheet.create({
     paddingTop: 25,
     backgroundColor: "#fff",
   },
-  fieldWrapper: {
-  },
+  fieldWrapper: {},
   loading: {
-    position: "absolute", 
+    position: "absolute",
     top: 10,
-    left: 10
+    left: 10,
+  },
+  breakLine: {
+    marginTop: 20, 
   },
   heading: {
     fontSize: 24,
