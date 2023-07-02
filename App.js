@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { Audio } from "expo-av";
 import axios from "axios";
+import * as Notifications from "expo-notifications";
 
 const App = () => {
   const [recording, setRecording] = React.useState(); //object with rec data, cleared once rec data has been extracted
@@ -30,10 +31,33 @@ const App = () => {
     input5: "",
     input6: "",
     input7: "",
-  }); // input object 
+  }); // input object
+  const [sound, setSound] = React.useState(); //notification sound
+
+  //notification playback
+  async function playSound() {
+    console.log("Loading Sound");
+    const { sound } = await Audio.Sound.createAsync(
+      require("./assets/rec_sound.wav")
+    );
+    setSound(sound);
+
+    console.log("Playing Sound");
+    await sound.playAsync();
+  }
+
+  React.useEffect(() => {
+    return sound
+      ? () => {
+          console.log("Unloading Sound");
+          sound.unloadAsync();
+        }
+      : undefined;
+  }, [sound]);
 
   //start recording
   async function startRecording() {
+    playSound();
     try {
       console.log("Requesting permissions..");
       await Audio.requestPermissionsAsync();
@@ -88,7 +112,7 @@ const App = () => {
       });
 
       setRecResponse(
-        await axios.post("https://b401-92-26-12-87.ngrok-free.app", formData, {
+        await axios.post("https://6038-92-26-12-87.ngrok-free.app", formData, {
           headers: {
             "Content-Type": "multipart/form-data",
           },
@@ -199,6 +223,17 @@ const App = () => {
     }
   };
 
+  //if result ends in "next" it will start the rec again. Needs to know when to stop
+  const str = "Next";
+  useEffect(()=> {
+    if (inputText) {
+      if (inputText.includes(str)) {
+        startRecording();
+      }
+    }
+  }, [inputText])
+
+
   return (
     <View style={styles.container}>
       <Text style={styles.heading}>Testing recording</Text>
@@ -211,9 +246,11 @@ const App = () => {
           {recording ? "Recording..." : "Press and hold to record"}
         </Text>
       </TouchableOpacity>
-      <View style={styles.breakLine}/>
+      <View style={styles.breakLine} />
       <TouchableOpacity onPress={onPressHandler} style={styles.button}>
-        <Text style={styles.buttonText}>{ recording ? 'Stop Recording' : 'Start Recording' }</Text>
+        <Text style={styles.buttonText}>
+          {recording ? "Stop Recording" : "Start Recording"}
+        </Text>
       </TouchableOpacity>
       <View style={styles.outputWrapper}>
         <View style={styles.fieldWrapper}>
@@ -311,7 +348,7 @@ const styles = StyleSheet.create({
     left: 10,
   },
   breakLine: {
-    marginTop: 20, 
+    marginTop: 20,
   },
   heading: {
     fontSize: 24,
