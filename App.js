@@ -112,7 +112,7 @@ const App = () => {
       });
 
       setRecResponse(
-        await axios.post("https://6038-92-26-12-87.ngrok-free.app", formData, {
+        await axios.post("https://47ec-92-26-12-87.ngrok-free.app", formData, {
           headers: {
             "Content-Type": "multipart/form-data",
           },
