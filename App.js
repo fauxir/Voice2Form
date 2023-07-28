@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import {
   StyleSheet,
   View,
@@ -10,7 +10,6 @@ import {
 } from "react-native";
 import { Audio } from "expo-av";
 import axios from "axios";
-import * as Notifications from "expo-notifications";
 
 const App = () => {
   const [recording, setRecording] = React.useState(); //object with rec data, cleared once rec data has been extracted
@@ -33,6 +32,8 @@ const App = () => {
     input7: "",
   }); // input object
   const [sound, setSound] = React.useState(); //notification sound
+  const [metering, setMetering] = useState(); // measure noise levels
+  const [quietDuration, setQuietDuration] = useState(0); // quiet duration
 
   //notification playback
   async function playSound() {
@@ -71,6 +72,12 @@ const App = () => {
         Audio.RecordingOptionsPresets.HIGH_QUALITY
       );
       setRecording(recording);
+      // Continuously monitor microphone levels
+      Audio.setAudioModeAsync({ allowsRecordingIOS: true });
+      recording.setOnRecordingStatusUpdate((status) => {
+        const { isRecording, durationMillis, metering } = status;
+        setMetering(metering);
+      });
       console.log("Recording started");
     } catch (err) {
       console.error("Failed to start recording", err);
@@ -112,7 +119,7 @@ const App = () => {
       });
 
       setRecResponse(
-        await axios.post("https://47ec-92-26-12-87.ngrok-free.app", formData, {
+        await axios.post("https://a8c4-2a02-c7c-9a55-b700-752d-9d3a-867b-72be.ngrok-free.app", formData, {
           headers: {
             "Content-Type": "multipart/form-data",
           },
@@ -156,55 +163,66 @@ const App = () => {
     }
   }, [inputText]);
 
-  //set inputs by voice
+  const str = "next.";
+  const str2 = "next";
+  
   useEffect(() => {
     if (inputText) {
+      // If last word is 'next', start the recording again
+      const words = inputText.split(' ');
+      if (words.length > 0 && (words[words.length - 1].toLowerCase() === str || words[words.length - 1].toLowerCase() === str2)) {
+        startRecording();
+      }
+  
+      // Set inputs by voice, excluding the last word 'next' if it exists
       if (inputCount === 1) {
         setInputObj((prevInputObj) => ({
           ...prevInputObj,
-          input1: inputText,
+          input1: words.length > 0 && words[words.length - 1].toLowerCase() === str || words[words.length - 1].toLowerCase() === str2 ? words.slice(0, -1).join(' ') : inputText,
         }));
         console.log(inputObj.input1);
         setInputCount(2);
       } else if (inputCount === 2) {
         setInputObj((prevInputObj) => ({
           ...prevInputObj,
-          input2: inputText,
+          input2: words.length > 0 && words[words.length - 1].toLowerCase() === str || words[words.length - 1].toLowerCase() === str2 ? words.slice(0, -1).join(' ') : inputText,
         }));
         setInputCount(3);
       } else if (inputCount === 3) {
         setInputObj((prevInputObj) => ({
           ...prevInputObj,
-          input3: inputText,
+          input3: words.length > 0 && words[words.length - 1].toLowerCase() === str || words[words.length - 1].toLowerCase() === str2 ? words.slice(0, -1).join(' ') : inputText,
         }));
         setInputCount(4);
       } else if (inputCount === 4) {
         setInputObj((prevInputObj) => ({
           ...prevInputObj,
-          input4: inputText,
+          input4: words.length > 0 && words[words.length - 1].toLowerCase() === str || words[words.length - 1].toLowerCase() === str2 ? words.slice(0, -1).join(' ') : inputText,
         }));
         setInputCount(5);
       } else if (inputCount === 5) {
         setInputObj((prevInputObj) => ({
           ...prevInputObj,
-          input5: inputText,
+          input5: words.length > 0 && words[words.length - 1].toLowerCase() === str || words[words.length - 1].toLowerCase() === str2 ? words.slice(0, -1).join(' ') : inputText,
         }));
         setInputCount(6);
       } else if (inputCount === 6) {
         setInputObj((prevInputObj) => ({
           ...prevInputObj,
-          input6: inputText,
+          input6: words.length > 0 && words[words.length - 1].toLowerCase() === str || words[words.length - 1].toLowerCase() === str2 ? words.slice(0, -1).join(' ') : inputText,
         }));
         setInputCount(7);
       } else if (inputCount === 7) {
         setInputObj((prevInputObj) => ({
           ...prevInputObj,
-          input7: inputText,
+          input7: words.length > 0 && words[words.length - 1].toLowerCase() === str || words[words.length - 1].toLowerCase() === str2 ? words.slice(0, -1).join(' ') : inputText,
         }));
         setInputCount(8);
       }
     }
   }, [inputText]);
+  
+  
 
   //Error alert
   const showErrorAlert = (err) => {
@@ -223,16 +241,26 @@ const App = () => {
     }
   };
 
-  //if result ends in "next" it will start the rec again. Needs to know when to stop
-  const str = "Next";
-  useEffect(()=> {
-    if (inputText) {
-      if (inputText.includes(str)) {
-        startRecording();
-      }
-    }
-  }, [inputText])
+  // metering noise levels hard coded levels
+  useEffect(() => {
+    console.log(metering);
+    const quietThreshold = -35; // dB threshold for quietness
+    const requiredDuration = 0.15; // seconds
+    const interval = 100; // milliseconds (adjust as needed)
 
+    const currentLevel = metering;
+    if (currentLevel <= quietThreshold) {
+      console.log("stage 1");
+      setQuietDuration((prevQuietDuration) => prevQuietDuration + interval);
+      console.log("stage 1", quietDuration);
+      if (quietDuration >= requiredDuration * 1000) {
+        console.log("Quietness detected for the required duration.");
+        stopRecording();
+      }
+    } else {
+      setQuietDuration(0);
+    }
+  }, [metering]);
 
   return (
     <View style={styles.container}>
