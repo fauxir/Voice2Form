@@ -119,7 +119,7 @@ const App = () => {
       });
 
       setRecResponse(
-        await axios.post("https://a8c4-2a02-c7c-9a55-b700-752d-9d3a-867b-72be.ngrok-free.app", formData, {
+        await axios.post("https://4cdb-2a02-c7c-9a55-b700-ec3b-af23-9209-c458.ngrok-free.app", formData, {
           headers: {
             "Content-Type": "multipart/form-data",
           },
@@ -288,6 +288,7 @@ const App = () => {
             onChangeText={(text) => handleChangeText(text, "input1")}
             style={styles.output}
             returnKeyType="next"
+            onSubmitEditing={() => focusNextInput(input2Ref)}
             // onContentSizeChange={() => focusNextInput(input2Ref)}
           />
           {isLoading && inputCount === 1 && (
