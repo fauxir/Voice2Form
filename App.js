@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { Audio } from "expo-av";
 import axios from "axios";
+import * as SQLite from 'expo-sqlite';
 
 const App = () => {
   const [recording, setRecording] = React.useState(); //object with rec data, cleared once rec data has been extracted
@@ -261,6 +262,29 @@ const App = () => {
       setQuietDuration(0);
     }
   }, [metering]);
+
+  // Database
+  const db = SQLite.openDatabase(
+    {
+      name: 'MainDB',
+      location: 'default',
+    },
+    ()=> {},
+    error => {console.log("DB error : ", error)}
+  )
+  useEffect(()=>{
+    createTable()
+  }, [])
+
+  const createTable = () => {
+    db.transaction((tx) =>{
+      tx.executeSql(
+        "CREATE TABLE IF NOT EXISTS "
+        +"Form inputs " // Name of the table
+        +"(ID INTEGER PRIMARY KEY AUTOINCREMENT, Input TEXT)" // First column for ID and second column for inputs 
+      )
+    })
+  }
 
   return (
     <View style={styles.container}>
