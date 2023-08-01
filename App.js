@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { Audio } from "expo-av";
 import axios from "axios";
-import * as SQLite from 'expo-sqlite';
+import * as SQLite from "expo-sqlite";
 
 const App = () => {
   const [recording, setRecording] = React.useState(); //object with rec data, cleared once rec data has been extracted
@@ -120,11 +120,15 @@ const App = () => {
       });
 
       setRecResponse(
-        await axios.post("https://4cdb-2a02-c7c-9a55-b700-ec3b-af23-9209-c458.ngrok-free.app", formData, {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        })
+        await axios.post(
+          "https://4cdb-2a02-c7c-9a55-b700-ec3b-af23-9209-c458.ngrok-free.app",
+          formData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          }
+        )
       );
       console.log("Upload successful");
     } catch (error) {
@@ -166,64 +170,105 @@ const App = () => {
 
   const str = "next.";
   const str2 = "next";
-  
+
   useEffect(() => {
     if (inputText) {
       // If last word is 'next', start the recording again
-      const words = inputText.split(' ');
-      if (words.length > 0 && (words[words.length - 1].toLowerCase() === str || words[words.length - 1].toLowerCase() === str2)) {
+      const words = inputText.split(" ");
+      if (
+        words.length > 0 &&
+        (words[words.length - 1].toLowerCase() === str ||
+          words[words.length - 1].toLowerCase() === str2)
+      ) {
         startRecording();
       }
-  
+
       // Set inputs by voice, excluding the last word 'next' if it exists
       if (inputCount === 1) {
         setInputObj((prevInputObj) => ({
           ...prevInputObj,
-          input1: words.length > 0 && words[words.length - 1].toLowerCase() === str || words[words.length - 1].toLowerCase() === str2 ? words.slice(0, -1).join(' ') : inputText,
+          input1:
+            (words.length > 0 &&
+              words[words.length - 1].toLowerCase() === str) ||
+            words[words.length - 1].toLowerCase() === str2
+              ? words.slice(0, -1).join(" ")
+              : inputText,
         }));
         console.log(inputObj.input1);
         setInputCount(2);
+        insertInput();
+        console.log("db data? ", getData());
       } else if (inputCount === 2) {
         setInputObj((prevInputObj) => ({
           ...prevInputObj,
-          input2: words.length > 0 && words[words.length - 1].toLowerCase() === str || words[words.length - 1].toLowerCase() === str2 ? words.slice(0, -1).join(' ') : inputText,
+          input2:
+            (words.length > 0 &&
+              words[words.length - 1].toLowerCase() === str) ||
+            words[words.length - 1].toLowerCase() === str2
+              ? words.slice(0, -1).join(" ")
+              : inputText,
         }));
         setInputCount(3);
+        insertInput();
+        console.log("db data? ", getData());
       } else if (inputCount === 3) {
         setInputObj((prevInputObj) => ({
           ...prevInputObj,
-          input3: words.length > 0 && words[words.length - 1].toLowerCase() === str || words[words.length - 1].toLowerCase() === str2 ? words.slice(0, -1).join(' ') : inputText,
+          input3:
+            (words.length > 0 &&
+              words[words.length - 1].toLowerCase() === str) ||
+            words[words.length - 1].toLowerCase() === str2
+              ? words.slice(0, -1).join(" ")
+              : inputText,
         }));
         setInputCount(4);
       } else if (inputCount === 4) {
         setInputObj((prevInputObj) => ({
           ...prevInputObj,
-          input4: words.length > 0 && words[words.length - 1].toLowerCase() === str || words[words.length - 1].toLowerCase() === str2 ? words.slice(0, -1).join(' ') : inputText,
+          input4:
+            (words.length > 0 &&
+              words[words.length - 1].toLowerCase() === str) ||
+            words[words.length - 1].toLowerCase() === str2
+              ? words.slice(0, -1).join(" ")
+              : inputText,
         }));
         setInputCount(5);
       } else if (inputCount === 5) {
         setInputObj((prevInputObj) => ({
           ...prevInputObj,
-          input5: words.length > 0 && words[words.length - 1].toLowerCase() === str || words[words.length - 1].toLowerCase() === str2 ? words.slice(0, -1).join(' ') : inputText,
+          input5:
+            (words.length > 0 &&
+              words[words.length - 1].toLowerCase() === str) ||
+            words[words.length - 1].toLowerCase() === str2
+              ? words.slice(0, -1).join(" ")
+              : inputText,
         }));
         setInputCount(6);
       } else if (inputCount === 6) {
         setInputObj((prevInputObj) => ({
           ...prevInputObj,
-          input6: words.length > 0 && words[words.length - 1].toLowerCase() === str || words[words.length - 1].toLowerCase() === str2 ? words.slice(0, -1).join(' ') : inputText,
+          input6:
+            (words.length > 0 &&
+              words[words.length - 1].toLowerCase() === str) ||
+            words[words.length - 1].toLowerCase() === str2
+              ? words.slice(0, -1).join(" ")
+              : inputText,
         }));
         setInputCount(7);
       } else if (inputCount === 7) {
         setInputObj((prevInputObj) => ({
           ...prevInputObj,
-          input7: words.length > 0 && words[words.length - 1].toLowerCase() === str || words[words.length - 1].toLowerCase() === str2 ? words.slice(0, -1).join(' ') : inputText,
+          input7:
+            (words.length > 0 &&
+              words[words.length - 1].toLowerCase() === str) ||
+            words[words.length - 1].toLowerCase() === str2
+              ? words.slice(0, -1).join(" ")
+              : inputText,
         }));
         setInputCount(8);
       }
     }
   }, [inputText]);
-  
-  
 
   //Error alert
   const showErrorAlert = (err) => {
@@ -263,28 +308,131 @@ const App = () => {
     }
   }, [metering]);
 
-  // Database
-  const db = SQLite.openDatabase(
-    {
-      name: 'MainDB',
-      location: 'default',
-    },
-    ()=> {},
-    error => {console.log("DB error : ", error)}
-  )
-  useEffect(()=>{
-    createTable()
-  }, [])
+  // Create DB
+  const db = SQLite.openDatabase("MainDB.db");
 
+  // Init DB
   const createTable = () => {
-    db.transaction((tx) =>{
+    db.transaction((tx) => {
       tx.executeSql(
-        "CREATE TABLE IF NOT EXISTS "
-        +"Form inputs " // Name of the table
-        +"(ID INTEGER PRIMARY KEY AUTOINCREMENT, Input TEXT)" // First column for ID and second column for inputs 
-      )
-    })
-  }
+        "CREATE TABLE IF NOT EXISTS FormInput " +
+          "(ID INTEGER PRIMARY KEY AUTOINCREMENT, Input TEXT)",
+        [],
+        () => {
+          console.log("Table created successfully");
+        },
+        (txObj, error) => {
+          console.log("Error creating table: ", error);
+        }
+      );
+    });
+  };
+
+  useEffect(() => {
+    createTable();
+  }, []);
+
+  const insertInput = async () => {
+    await db.transaction(async (tx) => {
+      await tx.executeSql(
+        "INSERT INTO FormInput (Input) VALUES (?)",
+        [inputText], // Use parameter binding to avoid SQL injection
+        (_, result) => {
+          console.log("Data inserted successfully");
+        },
+        (_, error) => {
+          console.log("Error inserting data: ", error);
+        }
+      );
+    });
+  };
+
+  const getData = () => {
+    try {
+      db.transaction((tx) => {
+        tx.executeSql(
+          "SELECT Input FROM FormInput",
+          [],
+          (_, results) => {
+            var len = results.rows.length;
+            if (len > 0) {
+              var userInput = results.rows.item(0).Input; // Call item() as a function
+              console.log("Do we have a table? : ", userInput);
+            }
+          },
+          (_, error) => {
+            console.log("Error fetching data: ", error);
+          }
+        );
+      });
+    } catch (error) {
+      console.log("getData error:", error);
+    }
+  };
+
+  // Reset DB
+  const insertInitialData = () => {
+    db.transaction(tx => {
+      tx.executeSql(
+        'INSERT INTO FormInput (Input) VALUES (?)',
+        ['Initial data 1'],
+        () => {
+          console.log('Initial data inserted successfully');
+        },
+        (_, error) => {
+          console.log('Error inserting initial data: ', error);
+        }
+      );
+  
+      tx.executeSql(
+        'INSERT INTO FormInput (Input) VALUES (?)',
+        ['Initial data 2'],
+        () => {
+          console.log('Initial data inserted successfully');
+        },
+        (_, error) => {
+          console.log('Error inserting initial data: ', error);
+        }
+      );
+  
+      // Add more initial data inserts if needed
+    });
+  };
+
+  const resetDatabase = () => {
+    db.transaction((tx) => {
+      // Drop the existing table (if it exists)
+      tx.executeSql("DROP TABLE IF EXISTS FormInput", []);
+
+      // Create the table again
+      tx.executeSql(
+        "CREATE TABLE IF NOT EXISTS FormInput " +
+          "(ID INTEGER PRIMARY KEY AUTOINCREMENT, Input TEXT)",
+        [],
+        () => {
+          console.log("Table created successfully");
+
+          // Insert initial data (if needed)
+          insertInitialData();
+        },
+        (_, error) => {
+          console.log("Error creating table: ", error);
+        }
+      );
+    });
+  };
+
+  useEffect(() => {
+    // When the component mounts, reset the database and populate initial data
+    resetDatabase();
+  }, []);
+
+  const handleResetDatabase = () => {
+    // Reset the database again (use this when needed, e.g., with a reset button)
+    resetDatabase();
+  };
+
+  
 
   return (
     <View style={styles.container}>
@@ -382,6 +530,13 @@ const App = () => {
             <ActivityIndicator style={styles.loading} />
           )}
         </View>
+        <TouchableOpacity
+          title="Reset Database"
+          onPress={handleResetDatabase}
+          style={[styles.button, recording && styles.buttonRecording]}
+        >
+          <Text style={styles.buttonText}>SQLite Database Example</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
