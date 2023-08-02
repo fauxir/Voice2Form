@@ -11,6 +11,8 @@ import {
 import { Audio } from "expo-av";
 import axios from "axios";
 import * as SQLite from "expo-sqlite";
+import * as FileSystem from 'expo-file-system';
+
 
 const App = () => {
   const [recording, setRecording] = React.useState(); //object with rec data, cleared once rec data has been extracted
@@ -35,6 +37,8 @@ const App = () => {
   const [sound, setSound] = React.useState(); //notification sound
   const [metering, setMetering] = useState(); // measure noise levels
   const [quietDuration, setQuietDuration] = useState(0); // quiet duration
+  const [startStopRec, setStartStopRec] = useState(false); // toggle rec button
+  const [buttonActive, setButtonActive] = useState(true); // deactivate press& hold rec button
 
   //notification playback
   async function playSound() {
@@ -89,13 +93,15 @@ const App = () => {
   //stop recording
   async function stopRecording() {
     console.log("Stopping recording..");
-    setRecording(undefined);
-    await recording.stopAndUnloadAsync();
-    await Audio.setAudioModeAsync({
-      allowsRecordingIOS: false,
-    });
-    setPath(recording.getURI());
-    setStoppedRec(true);
+    if (recording) {
+      await recording.stopAndUnloadAsync();
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: false,
+      });
+      setPath(recording.getURI());
+      setRecording(undefined);
+      setStoppedRec(true);
+    }
   }
 
   //once stopped rec sed to server and handdle submission
@@ -222,6 +228,8 @@ const App = () => {
               : inputText,
         }));
         setInputCount(4);
+        insertInput();
+        console.log("db data? ", getData());
       } else if (inputCount === 4) {
         setInputObj((prevInputObj) => ({
           ...prevInputObj,
@@ -233,6 +241,8 @@ const App = () => {
               : inputText,
         }));
         setInputCount(5);
+        insertInput();
+        console.log("db data? ", getData());
       } else if (inputCount === 5) {
         setInputObj((prevInputObj) => ({
           ...prevInputObj,
@@ -244,6 +254,8 @@ const App = () => {
               : inputText,
         }));
         setInputCount(6);
+        insertInput();
+        console.log("db data? ", getData());
       } else if (inputCount === 6) {
         setInputObj((prevInputObj) => ({
           ...prevInputObj,
@@ -255,6 +267,8 @@ const App = () => {
               : inputText,
         }));
         setInputCount(7);
+        insertInput();
+        console.log("db data? ", getData());
       } else if (inputCount === 7) {
         setInputObj((prevInputObj) => ({
           ...prevInputObj,
@@ -282,29 +296,46 @@ const App = () => {
   const onPressHandler = () => {
     if (recording) {
       stopRecording();
+      setStartStopRec(false);
     } else {
       startRecording();
+      setStartStopRec(true);
+    }
+  };
+
+  //toggle start top recording
+  const toggleOnPressHandler = () => {
+    if (buttonActive) {
+      if (recording) {
+        stopRecording();
+      } else {
+        startRecording();
+      }
+      // Disable the button for 1 second
+      setButtonActive(false);
+      setTimeout(() => setButtonActive(true), 1000); // Enable the button after 1 second
     }
   };
 
   // metering noise levels hard coded levels
   useEffect(() => {
-    console.log(metering);
-    const quietThreshold = -35; // dB threshold for quietness
-    const requiredDuration = 0.15; // seconds
-    const interval = 100; // milliseconds (adjust as needed)
-
-    const currentLevel = metering;
-    if (currentLevel <= quietThreshold) {
-      console.log("stage 1");
-      setQuietDuration((prevQuietDuration) => prevQuietDuration + interval);
-      console.log("stage 1", quietDuration);
-      if (quietDuration >= requiredDuration * 1000) {
-        console.log("Quietness detected for the required duration.");
-        stopRecording();
+    if (startStopRec) {
+      console.log(metering);
+      const quietThreshold = -35; // dB threshold for quietness
+      const requiredDuration = 0.15; // seconds
+      const interval = 100; // milliseconds (adjust as needed)
+      const currentLevel = metering;
+      if (currentLevel <= quietThreshold) {
+        console.log("stage 1");
+        setQuietDuration((prevQuietDuration) => prevQuietDuration + interval);
+        console.log("stage 1", quietDuration);
+        if (quietDuration >= requiredDuration * 1000) {
+          console.log("Quietness detected for the required duration.");
+          stopRecording();
+        }
+      } else {
+        setQuietDuration(0);
       }
-    } else {
-      setQuietDuration(0);
     }
   }, [metering]);
 
@@ -356,7 +387,8 @@ const App = () => {
           (_, results) => {
             var len = results.rows.length;
             if (len > 0) {
-              var userInput = results.rows.item(0).Input; // Call item() as a function
+              console.log("input count: ", inputCount - 1);
+              var userInput = results.rows.item(inputCount - 1).Input; // Call item() as a function
               console.log("Do we have a table? : ", userInput);
             }
           },
@@ -371,49 +403,21 @@ const App = () => {
   };
 
   // Reset DB
-  const insertInitialData = () => {
-    db.transaction(tx => {
-      tx.executeSql(
-        'INSERT INTO FormInput (Input) VALUES (?)',
-        ['Initial data 1'],
-        () => {
-          console.log('Initial data inserted successfully');
-        },
-        (_, error) => {
-          console.log('Error inserting initial data: ', error);
-        }
-      );
-  
-      tx.executeSql(
-        'INSERT INTO FormInput (Input) VALUES (?)',
-        ['Initial data 2'],
-        () => {
-          console.log('Initial data inserted successfully');
-        },
-        (_, error) => {
-          console.log('Error inserting initial data: ', error);
-        }
-      );
-  
-      // Add more initial data inserts if needed
-    });
-  };
-
   const resetDatabase = () => {
     db.transaction((tx) => {
       // Drop the existing table (if it exists)
       tx.executeSql("DROP TABLE IF EXISTS FormInput", []);
-
+      console.log("Table deleted");
       // Create the table again
       tx.executeSql(
         "CREATE TABLE IF NOT EXISTS FormInput " +
           "(ID INTEGER PRIMARY KEY AUTOINCREMENT, Input TEXT)",
         [],
         () => {
-          console.log("Table created successfully");
+          console.log("New table created successfully");
 
           // Insert initial data (if needed)
-          insertInitialData();
+          // insertInitialData();
         },
         (_, error) => {
           console.log("Error creating table: ", error);
@@ -422,24 +426,30 @@ const App = () => {
     });
   };
 
-  useEffect(() => {
-    // When the component mounts, reset the database and populate initial data
-    resetDatabase();
-  }, []);
+  //copy DB for debugging purposes
+  const copyDatabaseToDownloadFolder = async () => {
+    try {
+      const databaseUri = `${FileSystem.documentDirectory}SQLite/MainDB.db`;
+      const downloadUri = `${FileSystem.documentDirectory}MainDB.db`;
+      await FileSystem.copyAsync({ from: databaseUri, to: downloadUri });
+      console.log('Database file copied to Downloads folder.');
+    } catch (error) {
+      console.log('Error copying database file:', error);
+    }
+  };
 
   const handleResetDatabase = () => {
     // Reset the database again (use this when needed, e.g., with a reset button)
     resetDatabase();
   };
 
-  
-
   return (
     <View style={styles.container}>
       <Text style={styles.heading}>Testing recording</Text>
       <TouchableOpacity
-        style={[styles.button, recording && styles.buttonRecording]}
-        onPressIn={startRecording}
+        style={[styles.button, !buttonActive && styles.buttonInactive, recording && styles.buttonRecording]}
+        onPressIn={toggleOnPressHandler}
+        disabled={!buttonActive} // Disable the button when buttonActive is false
         onPressOut={stopRecording}
       >
         <Text style={styles.buttonText}>
@@ -530,13 +540,15 @@ const App = () => {
             <ActivityIndicator style={styles.loading} />
           )}
         </View>
-        <TouchableOpacity
-          title="Reset Database"
-          onPress={handleResetDatabase}
-          style={[styles.button, recording && styles.buttonRecording]}
-        >
-          <Text style={styles.buttonText}>SQLite Database Example</Text>
-        </TouchableOpacity>
+        <View style={styles.breakLine}>
+          <TouchableOpacity
+            title="Reset Database"
+            onPress={handleResetDatabase}
+            style={[styles.button, recording && styles.buttonRecording]}
+          >
+            <Text style={styles.buttonText}>SQLite Database Reset</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
@@ -557,6 +569,9 @@ const styles = StyleSheet.create({
   },
   breakLine: {
     marginTop: 20,
+  },
+  buttonInactive: {
+    backgroundColor: "#ccc",
   },
   heading: {
     fontSize: 24,
