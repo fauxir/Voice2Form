@@ -77,7 +77,7 @@ const App = () => {
         Audio.RecordingOptionsPresets.HIGH_QUALITY
       );
       setRecording(recording);
-      // Continuously monitor microphone levels
+      // Continuously monitor microphone level
       Audio.setAudioModeAsync({ allowsRecordingIOS: true });
       recording.setOnRecordingStatusUpdate((status) => {
         const { isRecording, durationMillis, metering } = status;
