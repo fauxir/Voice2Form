@@ -113,6 +113,8 @@ const App = () => {
     }
   }, [stoppedRec]);
 
+  const backendURL = "https://43e6-92-26-16-202.ngrok-free.app" // <--- here update BE URL
+
   //send rec to server
   async function sendRecordingToBackend() {
     const fileUri = path;
@@ -127,7 +129,7 @@ const App = () => {
 
       setRecResponse(
         await axios.post(
-          "https://4cdb-2a02-c7c-9a55-b700-ec3b-af23-9209-c458.ngrok-free.app",
+          backendURL,
           formData,
           {
             headers: {
@@ -145,6 +147,27 @@ const App = () => {
     }
   }
 
+// Send object to server
+async function sendFromObjToBackend(objectToSend) {
+  try {
+    const response = await axios.post(
+      backendURL, 
+      objectToSend,
+      {
+        headers: {
+          "Content-Type": "application/json", // Set the content type to JSON
+        },
+      }
+    );
+    
+    console.log("Object sent to the backend:", response.data);
+    return response.data;
+  } catch (error) {
+    console.log("Error occurred while sending the object:", error);
+    // Handle error here
+  }
+}
+
   // prepares input for manual text change
   useEffect(() => {
     setInputText(recResponse.data?.result);
@@ -156,7 +179,32 @@ const App = () => {
       ...prevInputObj,
       [inputField]: text,
     }));
+  
+    // Extract the number from the inputField (assuming it's in the format "inputX")
+    const inputNumber = inputField.replace("input", "");
+  
+    const updateInputInDB = async (inputId, inputValue) => {
+      await db.transaction(async (tx) => {
+        await tx.executeSql(
+          "UPDATE FormInput SET Input = ? WHERE ID = ?",
+          [inputValue, inputId],
+          (_, result) => {
+            console.log("Data updated successfully");
+          },
+          (_, error) => {
+            console.log("Error updating data: ", error);
+          }
+        );
+      });
+    };
+  
+    // Assuming you have the relevant input ID for the inputNumber
+    const inputId = inputNumber;
+    
+    // Call the update function with the extracted number and the changed text
+    updateInputInDB(inputId, text);
   };
+  
 
   const focusNextInput = (nextInputRef) => {
     nextInputRef.current.focus();
@@ -303,7 +351,7 @@ const App = () => {
     }
   };
 
-  //toggle start top recording
+  //toggle start stop recording
   const toggleOnPressHandler = () => {
     if (buttonActive) {
       if (recording) {
@@ -389,7 +437,7 @@ const App = () => {
             if (len > 0) {
               console.log("input count: ", inputCount - 1);
               var userInput = results.rows.item(inputCount - 1).Input; // Call item() as a function
-              console.log("Do we have a table? : ", userInput);
+              console.log("Newest entry : ", userInput);
             }
           },
           (_, error) => {
@@ -442,6 +490,46 @@ const App = () => {
     // Reset the database again (use this when needed, e.g., with a reset button)
     resetDatabase();
   };
+
+  // Convert DB data into an object and send to BE
+  const getDataAsObjects = (callback) => {
+    try {
+      db.transaction((tx) => {
+        tx.executeSql(
+          "SELECT Input FROM FormInput",
+          [],
+          (_, results) => {
+            var len = results.rows.length;
+            if (len > 0) {
+              var dataObjects = [];
+              for (let i = 0; i < len; i++) {
+                dataObjects.push({ Input: results.rows.item(i).Input });
+              }
+              callback(dataObjects);
+            }
+          },
+          (_, error) => {
+            console.log("Error fetching data: ", error);
+          }
+        );
+      });
+    } catch (error) {
+      console.log("getData error:", error);
+    }
+  };
+
+  const sendFormToBe = () => {
+    getDataAsObjects((dataObjects) => {
+      sendFromObjToBackend(dataObjects);
+      console.log("Data retrieved as objects:", dataObjects)
+    })
+  }
+
+  // getDataAsObjects((dataObjects) => {
+  //   console.log("Data retrieved as objects:", dataObjects);
+  // });
+
+  // console.log("here --->",inputObj)
 
   return (
     <View style={styles.container}>
@@ -546,7 +634,16 @@ const App = () => {
             onPress={handleResetDatabase}
             style={[styles.button, recording && styles.buttonRecording]}
           >
-            <Text style={styles.buttonText}>SQLite Database Reset</Text>
+            <Text style={styles.buttonText}>DB Reset</Text>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.breakLine}>
+          <TouchableOpacity
+            title="Send form toBE"
+            onPress={sendFormToBe}
+            style={[styles.button, recording && styles.buttonRecording]}
+          >
+            <Text style={styles.buttonText}>Send form to BE</Text>
           </TouchableOpacity>
         </View>
       </View>
