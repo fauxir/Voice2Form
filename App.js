@@ -114,8 +114,10 @@ const App = () => {
   }, [stoppedRec]);
 
   const backendURL = "https://43e6-92-26-16-202.ngrok-free.app" // <--- here update BE URL
+  const formObjURL = backendURL.concat("/store_object")
+  
 
-  //send rec to server
+  //send recording to server
   async function sendRecordingToBackend() {
     const fileUri = path;
     // setInputText("");// clears content for re recording
@@ -147,11 +149,11 @@ const App = () => {
     }
   }
 
-// Send object to server
+// Send form object to server
 async function sendFromObjToBackend(objectToSend) {
   try {
     const response = await axios.post(
-      backendURL, 
+      formObjURL, 
       objectToSend,
       {
         headers: {
