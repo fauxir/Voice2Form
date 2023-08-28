@@ -113,7 +113,7 @@ const App = () => {
     }
   }, [stoppedRec]);
 
-  const backendURL = "https://43e6-92-26-16-202.ngrok-free.app" // <--- here update BE URL
+  const backendURL = "https://adf6-92-26-16-202.ngrok-free.app" // <--- here update BE URL
   const formObjURL = backendURL.concat("/store_object")
   
 
