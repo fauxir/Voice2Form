@@ -113,7 +113,7 @@ const App = () => {
     }
   }, [stoppedRec]);
 
-  const backendURL = "https://adf6-92-26-16-202.ngrok-free.app" // <--- here update BE URL
+  const backendURL = "http://192.168.4.79:5000" // <--- here update BE URL
   const formObjURL = backendURL.concat("/store_object")
   
 
@@ -152,6 +152,7 @@ const App = () => {
 // Send form object to server
 async function sendFromObjToBackend(objectToSend) {
   try {
+    console.log("here: ", objectToSend)
     const response = await axios.post(
       formObjURL, 
       objectToSend,
@@ -165,10 +166,20 @@ async function sendFromObjToBackend(objectToSend) {
     console.log("Object sent to the backend:", response.data);
     return response.data;
   } catch (error) {
-    console.log("Error occurred while sending the object:", error);
+    if (error.response) {
+      // The error has a response from the server
+      console.log("Server error:", error.response.data);
+    } else if (error.request) {
+      // The request was made but no response was received
+      console.log("No response from server:", error.request);
+    } else {
+      // Something else went wrong
+      console.log("Error occurred:", error.message);
+    }
     // Handle error here
   }
 }
+
 
   // prepares input for manual text change
   useEffect(() => {
