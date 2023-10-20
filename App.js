@@ -192,6 +192,17 @@ async function sendFromObjToBackend(objectToSend) {
       ...prevInputObj,
       [inputField]: text,
     }));
+  // const handleChangeText = (text, inputField) => {
+  //   setInputObj((prevInputObj) => {
+  //     if (prevInputObj[inputField] === text) {
+  //       return prevInputObj; // If the text hasn't changed, don't update the state
+  //     }
+  //     return {
+  //       ...prevInputObj,
+  //       [inputField]: text,
+  //     };
+  //   });
+  
   
     // Extract the number from the inputField (assuming it's in the format "inputX")
     const inputNumber = inputField.replace("input", "");
@@ -202,7 +213,7 @@ async function sendFromObjToBackend(objectToSend) {
           "UPDATE FormInput SET Input = ? WHERE ID = ?",
           [inputValue, inputId],
           (_, result) => {
-            console.log("Data updated successfully");
+            console.log("Data updated successfully", inputValue, inputId, inputObj);
           },
           (_, error) => {
             console.log("Error updating data: ", error);
@@ -238,8 +249,8 @@ async function sendFromObjToBackend(objectToSend) {
   const str = "next.";
   const str2 = "next";
 
-  useEffect(() => {
-    if (inputText) {
+  useEffect(() => { // this one should work only when you want to do start recording and not be active every time  
+    if (inputText) { 
       // If last word is 'next', start the recording again
       const words = inputText.split(" ");
       if (
@@ -263,7 +274,7 @@ async function sendFromObjToBackend(objectToSend) {
         }));
         console.log(inputObj.input1);
         setInputCount(2);
-        insertInput();
+        insertInput(inputObj.input1);
         console.log("db data? ", getData());
       } else if (inputCount === 2) {
         setInputObj((prevInputObj) => ({
@@ -424,13 +435,24 @@ async function sendFromObjToBackend(objectToSend) {
     createTable();
   }, []);
 
-  const insertInput = async () => {
+
+  //Insert data in DB
+  const insertInput = async (manualInput) => {
+    const words = inputText.split(" ");
     await db.transaction(async (tx) => {
       await tx.executeSql(
-        "INSERT INTO FormInput (Input) VALUES (?)",
-        [inputText], // Use parameter binding to avoid SQL injection
+          "INSERT INTO FormInput (Input) VALUES (?)",
+          [(words.length > 0 &&
+            words[words.length - 1].toLowerCase() === str) ||
+          words[words.length - 1].toLowerCase() === str2
+            ? words.slice(0, -1).join(" ")
+            : inputText],
         (_, result) => {
-          console.log("Data inserted successfully");
+          console.log("Data inserted successfully", (words.length > 0 &&
+          words[words.length - 1].toLowerCase() === str) ||
+        words[words.length - 1].toLowerCase() === str2
+          ? words.slice(0, -1).join(" ")
+          : inputText);
         },
         (_, error) => {
           console.log("Error inserting data: ", error);
@@ -517,6 +539,7 @@ async function sendFromObjToBackend(objectToSend) {
               var dataObjects = [];
               for (let i = 0; i < len; i++) {
                 dataObjects.push({ Input: results.rows.item(i).Input });
+                console.log("results", results.rows)
               }
               callback(dataObjects);
             }
@@ -544,6 +567,28 @@ async function sendFromObjToBackend(objectToSend) {
 
   // console.log("here --->",inputObj)
 
+  // copy manul input to inputText
+  const [lastFocused, setLastFocused] = useState(null);
+
+  const handleFocus = (inputName) => {
+    setLastFocused(inputName);
+  };
+
+  const handleBlur = (inputName) => { // bug here if you want to edit it will copy the input
+    const matches = inputName.match(/\d+/); // Extract the numeric part from the string
+    if (matches) {
+      const inputNumber = parseInt(matches[0]); // Parse the extracted number as an integer
+      // Now you have the input number for further use
+      setInputCount[inputNumber]
+      console.log("input number is: ", inputNumber)
+    }
+    if (lastFocused === inputName) {
+      // Cursor has not moved away from the input
+      setInputText(inputObj[inputName]);
+     
+    } 
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.heading}>Testing recording</Text>
@@ -570,8 +615,10 @@ async function sendFromObjToBackend(objectToSend) {
             value={inputObj.input1}
             onChangeText={(text) => handleChangeText(text, "input1")}
             style={styles.output}
+            onFocus={() => handleFocus('input1')}
+            onBlur={() => handleBlur('input1')}
             returnKeyType="next"
-            onSubmitEditing={() => focusNextInput(input2Ref)}
+            // onSubmitEditing={() => focusNextInput(input2Ref)}
             // onContentSizeChange={() => focusNextInput(input2Ref)}
           />
           {isLoading && inputCount === 1 && (
@@ -584,8 +631,10 @@ async function sendFromObjToBackend(objectToSend) {
             value={inputObj.input2}
             onChangeText={(text) => handleChangeText(text, "input2")}
             ref={input2Ref}
+            onFocus={() => handleFocus('input2')}
+            onBlur={() => handleBlur('input2')}
             returnKeyType="next"
-            onSubmitEditing={() => focusNextInput(input3Ref)}
+            // onSubmitEditing={() => focusNextInput(input3Ref)}
           />
           {isLoading && inputCount === 2 && (
             <ActivityIndicator style={styles.loading} />
@@ -596,6 +645,8 @@ async function sendFromObjToBackend(objectToSend) {
             value={inputObj.input3}
             onChangeText={(text) => handleChangeText(text, "input3")}
             style={styles.output}
+            onFocus={() => handleFocus('input3')}
+            onBlur={() => handleBlur('input3')}
           />
           {isLoading && inputCount === 3 && (
             <ActivityIndicator style={styles.loading} />
@@ -606,6 +657,8 @@ async function sendFromObjToBackend(objectToSend) {
             value={inputObj.input4}
             onChangeText={(text) => handleChangeText(text, "input4")}
             style={styles.output}
+            onFocus={() => handleFocus('input4')}
+            onBlur={() => handleBlur('input4')}
           />
           {isLoading && inputCount === 4 && (
             <ActivityIndicator style={styles.loading} />
@@ -616,6 +669,8 @@ async function sendFromObjToBackend(objectToSend) {
             value={inputObj.input5}
             onChangeText={(text) => handleChangeText(text, "input5")}
             style={styles.output}
+            onFocus={() => handleFocus('input5')}
+            onBlur={() => handleBlur('input5')}
           />
           {isLoading && inputCount === 5 && (
             <ActivityIndicator style={styles.loading} />
@@ -626,6 +681,8 @@ async function sendFromObjToBackend(objectToSend) {
             value={inputObj.input6}
             onChangeText={(text) => handleChangeText(text, "input6")}
             style={styles.output}
+            onFocus={() => handleFocus('input6')}
+            onBlur={() => handleBlur('input6')}
           />
           {isLoading && inputCount === 6 && (
             <ActivityIndicator style={styles.loading} />
@@ -636,6 +693,8 @@ async function sendFromObjToBackend(objectToSend) {
             value={inputObj.input7}
             onChangeText={(text) => handleChangeText(text, "input7")}
             style={styles.output}
+            onFocus={() => handleFocus('input7')}
+            onBlur={() => handleBlur('input7')}
           />
           {isLoading && inputCount === 7 && (
             <ActivityIndicator style={styles.loading} />
